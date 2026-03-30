@@ -1,0 +1,12 @@
+django>=5.0,<6.0
+psycopg2-binary
+django-environ
+django-allauth
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+django-crispy-forms
+crispy-bootstrap5
+django-debug-toolbar
+django-redis
+redis
