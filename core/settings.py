@@ -57,6 +57,9 @@ INSTALLED_APPS = [
     # Internal Apps
     'users',
     'tasks',
+    'django_celery_results',
+    'django_celery_beat',
+    'storages',
 ]
 
 INTERNAL_IPS = [
@@ -112,6 +115,17 @@ AUTH_USER_MODEL = 'users.User'
 
 DATABASES = {
     'default': env.db(),
+}
+
+# Caching with Redis
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env("REDIS_URL", default="redis://127.0.0.1:6379/1"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
 }
 
 
@@ -194,3 +208,41 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     'http://localhost:3000',
     'http://127.0.0.1:3000',
 ])
+
+# Celery Configuration
+CELERY_BROKER_URL = env("REDIS_URL", default="redis://127.0.0.1:6379/1")
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+    'send-daily-overdue-summary': {
+        'task': 'tasks.tasks.daily_overdue_tasks_summary',
+        'schedule': crontab(hour=8, minute=0),  # Every morning at 8 AM
+    },
+}
+
+# Email Configuration (Console for development)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@protasker.com'
+
+# Storage Configuration
+if env('AWS_S3_ENDPOINT_URL', default=None):
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL')
+    AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME')
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = True
+    # Specific for MinIO
+    AWS_S3_ADDRESSING_STYLE = 'path'
+else:
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'

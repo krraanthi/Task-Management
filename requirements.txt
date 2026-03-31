@@ -10,3 +10,8 @@ crispy-bootstrap5
 django-debug-toolbar
 django-redis
 redis
+celery
+django-celery-results
+django-celery-beat
+django-storages
+boto3
