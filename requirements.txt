@@ -15,3 +15,11 @@ django-celery-results
 django-celery-beat
 django-storages
 boto3
+django-filter
+drf-spectacular
+pytest-django
+pytest-cov
+factory-boy
+pytest-mock
+gunicorn
+whitenoise
